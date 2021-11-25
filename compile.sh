@@ -27,6 +27,7 @@ EXT_RECURSIONGUARD_VERSION="0.1.0"
 EXT_LIBDEFLATE_VERSION="0.1.0"
 EXT_MORTON_VERSION="0.1.2"
 EXT_XXHASH_VERSION="0.1.1"
+EXT_REDIS_VERSION="5.3.4"
 
 function write_out {
 	echo "[$1] $2"
@@ -791,7 +792,7 @@ fi
 
 build_libxml2
 build_libzip
-build_sqlite3
+#build_sqlite3
 build_libdeflate
 
 # PECL libraries
@@ -826,7 +827,7 @@ echo "[PHP] Downloading additional extensions..."
 
 get_github_extension "pthreads" "$EXT_PTHREADS_VERSION" "pmmp" "pthreads" #"v" needed for release tags because github removes the "v"
 #get_pecl_extension "pthreads" "$EXT_PTHREADS_VERSION"
-
+get_pecl_extension "redis" "$EXT_REDIS_VERSION"
 get_github_extension "yaml" "$EXT_YAML_VERSION" "php" "pecl-file_formats-yaml"
 #get_pecl_extension "yaml" "$EXT_YAML_VERSION"
 
@@ -961,7 +962,7 @@ $HAS_DEBUG \
 --enable-xmlwriter \
 --disable-cgi \
 --disable-phpdbg \
---disable-session \
+--enable-session \
 --without-pear \
 --without-iconv \
 --with-pdo-sqlite \
@@ -1056,6 +1057,17 @@ echo "error_reporting=-1" >> "$INSTALL_DIR/bin/php.ini"
 echo "display_errors=1" >> "$INSTALL_DIR/bin/php.ini"
 echo "display_startup_errors=1" >> "$INSTALL_DIR/bin/php.ini"
 echo "recursionguard.enabled=0 ;disabled due to minor performance impact, only enable this if you need it for debugging" >> "$INSTALL_DIR/bin/php.ini"
+
+echo -n "[redis] checking..."
+cd "$BUILD_DIR/php/ext/redis"
+"$INSTALL_DIR/bin/phpize" --enable-redis-igbinary >> "$DIR/install.log" 2>&1
+./configure --with-php-config="$INSTALL_DIR/bin/php-config" >> "$DIR/install.log" 2>&1
+echo -n " compiling..."
+make -j4 >> "$DIR/install.log" 2>&1
+echo -n " installing..."
+make install >> "$DIR/install.log" 2>&1
+echo "extension=redis.so" >> "$INSTALL_DIR/bin/php.ini"
+echo " done!"
 
 if [ "$HAVE_OPCACHE" == "yes" ]; then
 	echo "zend_extension=opcache.so" >> "$INSTALL_DIR/bin/php.ini"
