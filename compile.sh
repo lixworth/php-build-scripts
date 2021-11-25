@@ -792,7 +792,7 @@ fi
 
 build_libxml2
 build_libzip
-#build_sqlite3
+build_sqlite3
 build_libdeflate
 
 # PECL libraries
